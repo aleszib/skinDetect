@@ -11,6 +11,26 @@ and support conservative change review workflows.
 - No cloud upload or external image handling.
 - No real patient photos in the repository.
 - Reports must use conservative language such as "change detected" and "review recommended".
+- This project is not a melanoma detector or diagnosis tool.
+
+## Photo import
+
+PR-002 adds a local photo import CLI that scans a folder and writes a JSON manifest.
+Recursive scanning is the default.
+
+Example:
+
+```bash
+python -m skintrack.cli import-photos ./photos --output ./artifacts/manifest.json
+```
+
+The manifest records:
+
+- schema version and creation time;
+- input directory and whether the scan was recursive;
+- per-file status, hash, original path, filename, timestamp provenance, and image dimensions when available;
+- counts for imported, skipped, unreadable, and unsupported files;
+- warnings, including unsupported-format notes such as HEIC not being supported yet.
 
 ## Developer setup
 
@@ -29,3 +49,7 @@ python -m pytest
 ruff check .
 ```
 
+## Safety reminder
+
+Do not commit real patient photos or other sensitive clinical images. This repository is for
+backend change detection and review support, not diagnosis.
