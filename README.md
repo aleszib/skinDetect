@@ -22,10 +22,14 @@ PR-003 adds heuristic image quality assessment to that import step. Each support
 now includes a `quality` section with technical checks for readability, brightness, sharpness,
 size, and overall usability.
 
+PR-004 adds overlap candidate ranking on top of the import manifest. It ranks likely pairs for
+later geometric registration, but it does not prove that two photos share the same skin region.
+
 Example:
 
 ```bash
 python -m skintrack.cli import-photos ./photos --output ./artifacts/manifest.json
+python -m skintrack.cli rank-overlap-candidates ./artifacts/manifest.json --output ./artifacts/overlap_candidates.json
 ```
 
 The manifest records:
@@ -37,6 +41,8 @@ The manifest records:
 - counts for imported, skipped, unreadable, and unsupported files;
 - counts for low-quality images that are technically readable but may be too dark, too bright,
   too blurry, or too small for reliable comparison;
+- overlap candidate ranking output with scores, statuses, reasons, penalties, and heuristic
+  similarity metadata;
 - warnings, including unsupported-format notes such as HEIC not being supported yet.
 
 ## Developer setup
@@ -64,3 +70,7 @@ backend change detection and review support, not diagnosis.
 Quality scores are heuristic technical checks only. They are not medical assessment and they do
 not diagnose melanoma or any other condition. Low image quality may prevent reliable future
 overlap or change analysis.
+
+Overlap candidate ranking is only a lightweight local heuristic. It does not prove geometric
+overlap, and geometric registration will be implemented in a later PR. No melanoma diagnosis or
+cancer risk scoring is performed.

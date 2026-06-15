@@ -37,7 +37,7 @@ A user provides a sequence of skin photos taken at different times. The system e
 photo import
   -> timestamp extraction
   -> image quality checks
-  -> candidate overlap search
+  -> overlap candidate ranking
   -> geometric registration
   -> overlap mask creation
   -> lesion candidate detection or manual candidate intake
@@ -46,6 +46,9 @@ photo import
   -> change flags
   -> text report + annotated image
 ```
+
+PR-004 adds overlap candidate ranking only. It is a lightweight local heuristic for identifying
+likely photo pairs to send to later geometric registration; it does not confirm actual overlap.
 
 ## Output contract
 For every change flag, the system should produce:
