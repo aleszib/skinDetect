@@ -19,4 +19,3 @@ __all__ = [
     "manifest_to_json",
     "write_photo_import_manifest",
 ]
-

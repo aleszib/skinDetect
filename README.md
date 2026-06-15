@@ -18,6 +18,10 @@ and support conservative change review workflows.
 PR-002 adds a local photo import CLI that scans a folder and writes a JSON manifest.
 Recursive scanning is the default.
 
+PR-003 adds heuristic image quality assessment to that import step. Each supported image record
+now includes a `quality` section with technical checks for readability, brightness, sharpness,
+size, and overall usability.
+
 Example:
 
 ```bash
@@ -29,7 +33,10 @@ The manifest records:
 - schema version and creation time;
 - input directory and whether the scan was recursive;
 - per-file status, hash, original path, filename, timestamp provenance, and image dimensions when available;
+- a `quality` object for supported images with readability, brightness, blur, size, and overall status;
 - counts for imported, skipped, unreadable, and unsupported files;
+- counts for low-quality images that are technically readable but may be too dark, too bright,
+  too blurry, or too small for reliable comparison;
 - warnings, including unsupported-format notes such as HEIC not being supported yet.
 
 ## Developer setup
@@ -53,3 +60,7 @@ ruff check .
 
 Do not commit real patient photos or other sensitive clinical images. This repository is for
 backend change detection and review support, not diagnosis.
+
+Quality scores are heuristic technical checks only. They are not medical assessment and they do
+not diagnose melanoma or any other condition. Low image quality may prevent reliable future
+overlap or change analysis.
