@@ -28,7 +28,15 @@ jobs:
             echo "present=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Set up Python with pip cache
+        if: steps.detect-python-project.outputs.present == 'true'
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
       - name: Set up Python
+        if: steps.detect-python-project.outputs.present != 'true'
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
