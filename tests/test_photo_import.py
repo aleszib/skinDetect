@@ -33,7 +33,9 @@ def test_importing_folder_with_supported_images(tmp_path: Path) -> None:
 
     assert manifest.counts.imported == 2
     assert manifest.counts.total_files == 2
+    assert manifest.counts.low_quality == 2
     assert all(record.import_status == "imported" for record in manifest.photo_records)
+    assert all(record.quality is not None for record in manifest.photo_records)
 
 
 def test_unsupported_files_are_marked_unsupported(tmp_path: Path) -> None:
@@ -129,6 +131,8 @@ def test_manifest_json_has_expected_schema_fields(tmp_path: Path) -> None:
     assert "warnings" in payload
     assert "counts" in payload
     assert payload["counts"]["total_files"] == 1
+    assert payload["counts"]["low_quality"] == 1
+    assert payload["photo_records"][0]["quality"]["status"] == "low_quality"
 
 
 def test_cli_command_produces_manifest_file(tmp_path: Path) -> None:

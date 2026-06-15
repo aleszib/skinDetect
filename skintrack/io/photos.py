@@ -10,9 +10,9 @@ from pathlib import Path
 from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
-from PIL import Image, UnidentifiedImageError
 
 from skintrack.metadata.timestamps import TimestampResult, extract_timestamp
+from skintrack.quality.images import ImageQualityAssessment, assess_image_quality
 
 SUPPORTED_IMAGE_EXTENSIONS: Final[set[str]] = {".jpg", ".jpeg", ".png"}
 HEIC_EXTENSION: Final[str] = ".heic"
@@ -33,6 +33,7 @@ class PhotoImportRecord(BaseModel):
     timestamp_source: str
     timestamp_confidence: str
     timestamp_notes: list[str] = Field(default_factory=list)
+    quality: ImageQualityAssessment | None = None
     width: int | None = None
     height: int | None = None
     import_status: ImportStatus
@@ -49,6 +50,7 @@ class ImportCounts(BaseModel):
     skipped: int
     unreadable: int
     unsupported: int
+    low_quality: int
 
 
 class PhotoImportManifest(BaseModel):
@@ -128,12 +130,20 @@ def _build_record(path: Path, *, warnings: list[str]) -> PhotoImportRecord:
     notes.extend(hash_notes)
 
     if extension in SUPPORTED_IMAGE_EXTENSIONS:
-        return _build_supported_image_record(path, original_path, timestamp, file_hash, notes)
+        quality = assess_image_quality(path)
+        return _build_supported_image_record(
+            path,
+            original_path,
+            timestamp,
+            file_hash,
+            notes,
+            quality=quality,
+            warnings=warnings,
+        )
 
     if extension == HEIC_EXTENSION:
         warning = "HEIC files are not supported in this release."
-        if warning not in warnings:
-            warnings.append(warning)
+        _append_warning(warnings, warning)
         notes.append(warning)
         return PhotoImportRecord(
             original_path=original_path,
@@ -143,13 +153,13 @@ def _build_record(path: Path, *, warnings: list[str]) -> PhotoImportRecord:
             timestamp_source="unsupported",
             timestamp_confidence="unknown",
             timestamp_notes=notes,
+            quality=None,
             import_status="unsupported",
             notes=["File extension .heic is not supported yet."],
         )
 
     warning = f"Unsupported file extension {extension or '[none]'}: {path.name}"
-    if warning not in warnings:
-        warnings.append(warning)
+    _append_warning(warnings, warning)
     notes.append(warning)
     return PhotoImportRecord(
         original_path=original_path,
@@ -159,6 +169,7 @@ def _build_record(path: Path, *, warnings: list[str]) -> PhotoImportRecord:
         timestamp_source="unsupported",
         timestamp_confidence="unknown",
         timestamp_notes=notes,
+        quality=None,
         import_status="unsupported",
         notes=["Skipped because the file extension is not supported."],
     )
@@ -170,14 +181,16 @@ def _build_supported_image_record(
     timestamp: TimestampResult,
     file_hash: str | None,
     notes: list[str],
+    *,
+    quality: ImageQualityAssessment,
+    warnings: list[str],
 ) -> PhotoImportRecord:
-    try:
-        with Image.open(path) as image:
-            width, height = image.size
-            image.load()
-    except (UnidentifiedImageError, OSError, ValueError) as exc:
-        unreadable_note = f"Image could not be opened: {exc.__class__.__name__}."
-        notes.append(unreadable_note)
+    notes.extend(quality.warnings)
+    for warning in quality.warnings:
+        _append_warning(warnings, f"{path.name}: {warning}")
+
+    if not quality.readable:
+        unreadable_note = quality.warnings[0] if quality.warnings else "Image is unreadable."
         return PhotoImportRecord(
             original_path=original_path,
             original_filename=path.name,
@@ -186,6 +199,7 @@ def _build_supported_image_record(
             timestamp_source=timestamp.timestamp_source,
             timestamp_confidence=timestamp.timestamp_confidence,
             timestamp_notes=notes,
+            quality=quality,
             width=None,
             height=None,
             import_status="unreadable",
@@ -200,8 +214,9 @@ def _build_supported_image_record(
         timestamp_source=timestamp.timestamp_source,
         timestamp_confidence=timestamp.timestamp_confidence,
         timestamp_notes=notes,
-        width=width,
-        height=height,
+        quality=quality,
+        width=quality.width,
+        height=quality.height,
         import_status="imported",
     )
 
@@ -223,12 +238,18 @@ def _safe_hash_file(path: Path) -> tuple[str | None, list[str]]:
 
 def _compute_counts(records: list[PhotoImportRecord]) -> ImportCounts:
     status_counts = Counter(record.import_status for record in records)
+    low_quality_count = sum(
+        1
+        for record in records
+        if record.quality is not None and record.quality.status == "low_quality"
+    )
     return ImportCounts(
         total_files=len(records),
         imported=status_counts.get("imported", 0),
         skipped=status_counts.get("skipped", 0),
         unreadable=status_counts.get("unreadable", 0),
         unsupported=status_counts.get("unsupported", 0),
+        low_quality=low_quality_count,
     )
 
 
@@ -236,3 +257,8 @@ def manifest_to_json(manifest: PhotoImportManifest) -> str:
     """Serialize a manifest as stable pretty-printed JSON."""
 
     return json.dumps(manifest.model_dump(mode="json"), indent=2, sort_keys=False)
+
+
+def _append_warning(warnings: list[str], warning: str) -> None:
+    if warning not in warnings:
+        warnings.append(warning)
