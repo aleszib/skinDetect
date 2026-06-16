@@ -68,6 +68,11 @@ projected observations into technical candidate tracks ordered by timestamp when
 preserves observation source and timestamp provenance, but it does not measure visual change or
 make diagnostic claims.
 
+PR-009 adds conservative technical change metrics over candidate tracks. It measures pixel area,
+bounding-box, brightness, and simple color differences across usable observations, and it keeps the
+output technical only. It does not flag danger, does not diagnose melanoma, and does not estimate
+cancer risk.
+
 ## Output contract
 For every change flag, the system should produce:
 
