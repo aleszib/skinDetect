@@ -37,6 +37,12 @@ candidate regions plus the geometric registration output and estimates where eac
 the paired photo. The result is technical geometry only; it does not decide whether the region
 changed or whether the same lesion is present.
 
+PR-008 adds temporal candidate tracking. It groups validated manual candidate regions and their
+projected observations into technical candidate tracks, ordered by timestamp when available. It
+preserves observation source, timestamp provenance, and conservative tracking confidence, but it
+does not measure change, does not prove clinical lesion identity, and does not produce a final
+medical report.
+
 Example:
 
 ```bash
@@ -45,6 +51,7 @@ python -m skintrack.cli rank-overlap-candidates ./artifacts/manifest.json --outp
 python -m skintrack.cli register-candidate-pairs ./artifacts/overlap_candidates.json --manifest ./artifacts/manifest.json --output ./artifacts/registrations.json --debug-dir ./artifacts/debug_registration
 python -m skintrack.cli validate-candidate-regions ./artifacts/candidate_regions.json --manifest ./artifacts/manifest.json --output ./artifacts/validated_candidate_regions.json --overlay-dir ./artifacts/candidate_overlays
 python -m skintrack.cli project-candidate-regions --validated-regions ./artifacts/validated_candidate_regions.json --registrations ./artifacts/registrations.json --manifest ./artifacts/manifest.json --output ./artifacts/projected_candidate_regions.json --overlay-dir ./artifacts/projected_overlays
+python -m skintrack.cli track-candidate-regions --manifest ./artifacts/manifest.json --validated-regions ./artifacts/validated_candidate_regions.json --projections ./artifacts/projected_candidate_regions.json --output ./artifacts/candidate_tracks.json
 ```
 
 The manifest records:
@@ -82,6 +89,13 @@ manual candidate region lands in the paired photo and can optionally emit neutra
 projection overlays. Supported projections are still only geometric estimates. They do not identify
 lesions, do not diagnose melanoma, do not estimate cancer risk, and do not prove that two regions
 are the same lesion clinically. Change measurement comes later.
+
+Temporal candidate tracking expects the original manifest plus the validated candidate-region JSON
+and the projected candidate-region JSON. It groups observations by manual candidate ID and orders
+them by timestamp when available. Tracking confidence is a conservative technical score that
+reflects observation availability, timestamp completeness, and projection strength. It does not
+prove that two observations are the same lesion clinically, and it does not measure visual change.
+Change metrics and change reports are later PRs.
 
 ## Developer setup
 
@@ -125,3 +139,6 @@ lesions or diagnose melanoma. No cancer risk scoring is performed.
 PR-007 projection overlays are similarly neutral technical inspection artifacts. They mark the
 source manual region and the projected region on a side-by-side local image pair so the geometric
 projection can be reviewed, but they do not indicate diagnostic concern or lesion identity.
+
+PR-008 does not add a new overlay type. If a future step adds a timeline visualization, it should
+remain technical and neutral, not diagnostic.

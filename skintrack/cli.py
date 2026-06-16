@@ -11,6 +11,7 @@ from skintrack.overlap.candidates import write_overlap_candidate_manifest
 from skintrack.regions.manual import write_validated_candidate_region_manifest
 from skintrack.regions.projection import write_projected_candidate_region_manifest
 from skintrack.registration.geometric import write_registration_manifest
+from skintrack.tracking.temporal import write_candidate_track_manifest
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -126,6 +127,31 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional directory for neutral technical projection overlays.",
     )
 
+    tracking_parser = subparsers.add_parser(
+        "track-candidate-regions",
+        help="Group validated and projected candidate regions into temporal tracks.",
+    )
+    tracking_parser.add_argument(
+        "--manifest",
+        required=True,
+        help="Photo import manifest JSON file.",
+    )
+    tracking_parser.add_argument(
+        "--validated-regions",
+        required=True,
+        help="Validated candidate-region JSON file.",
+    )
+    tracking_parser.add_argument(
+        "--projections",
+        required=True,
+        help="Projected candidate-region JSON file.",
+    )
+    tracking_parser.add_argument(
+        "--output",
+        required=True,
+        help="Output path for the candidate track JSON file.",
+    )
+
     return parser
 
 
@@ -180,6 +206,15 @@ def main(argv: Sequence[str] | None = None) -> int:
             Path(args.registrations),
             Path(args.output),
             overlay_dir=Path(args.overlay_dir) if args.overlay_dir is not None else None,
+        )
+        return 0
+
+    if args.command == "track-candidate-regions":
+        write_candidate_track_manifest(
+            Path(args.manifest),
+            Path(args.validated_regions),
+            Path(args.projections),
+            Path(args.output),
         )
         return 0
 
