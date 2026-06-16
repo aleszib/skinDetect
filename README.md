@@ -43,6 +43,11 @@ preserves observation source, timestamp provenance, and conservative tracking co
 does not measure change, does not prove clinical lesion identity, and does not produce a final
 medical report.
 
+PR-009 adds conservative technical change metrics over tracked candidate observations. It
+compares usable observations within each track using local pixel measurements for area, bounding
+box size, brightness, and simple color differences. The output is still technical review support
+only; it does not flag danger, does not diagnose melanoma, and does not estimate cancer risk.
+
 Example:
 
 ```bash
@@ -52,6 +57,7 @@ python -m skintrack.cli register-candidate-pairs ./artifacts/overlap_candidates.
 python -m skintrack.cli validate-candidate-regions ./artifacts/candidate_regions.json --manifest ./artifacts/manifest.json --output ./artifacts/validated_candidate_regions.json --overlay-dir ./artifacts/candidate_overlays
 python -m skintrack.cli project-candidate-regions --validated-regions ./artifacts/validated_candidate_regions.json --registrations ./artifacts/registrations.json --manifest ./artifacts/manifest.json --output ./artifacts/projected_candidate_regions.json --overlay-dir ./artifacts/projected_overlays
 python -m skintrack.cli track-candidate-regions --manifest ./artifacts/manifest.json --validated-regions ./artifacts/validated_candidate_regions.json --projections ./artifacts/projected_candidate_regions.json --output ./artifacts/candidate_tracks.json
+python -m skintrack.cli measure-candidate-changes --manifest ./artifacts/manifest.json --tracks ./artifacts/candidate_tracks.json --output ./artifacts/change_metrics.json
 ```
 
 The manifest records:
@@ -95,7 +101,14 @@ and the projected candidate-region JSON. It groups observations by manual candid
 them by timestamp when available. Tracking confidence is a conservative technical score that
 reflects observation availability, timestamp completeness, and projection strength. It does not
 prove that two observations are the same lesion clinically, and it does not measure visual change.
-Change metrics and change reports are later PRs.
+Change reports are later PRs.
+
+Conservative technical change metrics expect the original manifest plus the candidate-track JSON.
+PR-009 measures pixel-area, bounding-box, brightness, and simple color differences across usable
+track observations. Measurement confidence is a conservative technical score that reflects track
+confidence, observation confidence, timestamp provenance, and image-quality warnings. The output
+is technical only; it does not convert pixel measurements into physical millimeters, does not
+generate final user-facing medical reports, and does not flag danger.
 
 ## Developer setup
 
@@ -142,3 +155,7 @@ projection can be reviewed, but they do not indicate diagnostic concern or lesio
 
 PR-008 does not add a new overlay type. If a future step adds a timeline visualization, it should
 remain technical and neutral, not diagnostic.
+
+PR-009 does not add medical annotation or danger overlays. It only computes technical change
+metrics from local tracked observations and should remain conservative if the evidence is weak or
+missing.

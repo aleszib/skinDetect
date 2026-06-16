@@ -6,6 +6,7 @@ import argparse
 from pathlib import Path
 from typing import Sequence
 
+from skintrack.change.metrics import write_candidate_change_metrics_manifest
 from skintrack.io.photos import write_photo_import_manifest
 from skintrack.overlap.candidates import write_overlap_candidate_manifest
 from skintrack.regions.manual import write_validated_candidate_region_manifest
@@ -152,6 +153,26 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output path for the candidate track JSON file.",
     )
 
+    change_parser = subparsers.add_parser(
+        "measure-candidate-changes",
+        help="Measure conservative technical change metrics for tracked candidate observations.",
+    )
+    change_parser.add_argument(
+        "--manifest",
+        required=True,
+        help="Photo import manifest JSON file.",
+    )
+    change_parser.add_argument(
+        "--tracks",
+        required=True,
+        help="Candidate track JSON file.",
+    )
+    change_parser.add_argument(
+        "--output",
+        required=True,
+        help="Output path for the candidate change metrics JSON file.",
+    )
+
     return parser
 
 
@@ -214,6 +235,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             Path(args.manifest),
             Path(args.validated_regions),
             Path(args.projections),
+            Path(args.output),
+        )
+        return 0
+
+    if args.command == "measure-candidate-changes":
+        write_candidate_change_metrics_manifest(
+            Path(args.manifest),
+            Path(args.tracks),
             Path(args.output),
         )
         return 0
