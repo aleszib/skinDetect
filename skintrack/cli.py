@@ -9,6 +9,7 @@ from typing import Sequence
 from skintrack.io.photos import write_photo_import_manifest
 from skintrack.overlap.candidates import write_overlap_candidate_manifest
 from skintrack.regions.manual import write_validated_candidate_region_manifest
+from skintrack.regions.projection import write_projected_candidate_region_manifest
 from skintrack.registration.geometric import write_registration_manifest
 
 
@@ -96,6 +97,35 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional directory for neutral technical overlay images.",
     )
 
+    projection_parser = subparsers.add_parser(
+        "project-candidate-regions",
+        help="Project validated candidate regions through registered image pairs.",
+    )
+    projection_parser.add_argument(
+        "--validated-regions",
+        required=True,
+        help="Validated candidate-region JSON file.",
+    )
+    projection_parser.add_argument(
+        "--registrations",
+        required=True,
+        help="Registration JSON file.",
+    )
+    projection_parser.add_argument(
+        "--manifest",
+        required=True,
+        help="Photo import manifest JSON file.",
+    )
+    projection_parser.add_argument(
+        "--output",
+        required=True,
+        help="Output path for the projected candidate-region JSON file.",
+    )
+    projection_parser.add_argument(
+        "--overlay-dir",
+        help="Optional directory for neutral technical projection overlays.",
+    )
+
     return parser
 
 
@@ -138,6 +168,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         write_validated_candidate_region_manifest(
             Path(args.manifest),
             Path(args.regions_path),
+            Path(args.output),
+            overlay_dir=Path(args.overlay_dir) if args.overlay_dir is not None else None,
+        )
+        return 0
+
+    if args.command == "project-candidate-regions":
+        write_projected_candidate_region_manifest(
+            Path(args.manifest),
+            Path(args.validated_regions),
+            Path(args.registrations),
             Path(args.output),
             overlay_dir=Path(args.overlay_dir) if args.overlay_dir is not None else None,
         )
