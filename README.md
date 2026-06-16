@@ -25,11 +25,15 @@ size, and overall usability.
 PR-004 adds overlap candidate ranking on top of the import manifest. It ranks likely pairs for
 later geometric registration, but it does not prove that two photos share the same skin region.
 
+PR-005 adds backend geometric registration for the ranked pairs. It estimates technical image
+alignment only and can optionally write debug visualization images for inspection.
+
 Example:
 
 ```bash
 python -m skintrack.cli import-photos ./photos --output ./artifacts/manifest.json
 python -m skintrack.cli rank-overlap-candidates ./artifacts/manifest.json --output ./artifacts/overlap_candidates.json
+python -m skintrack.cli register-candidate-pairs ./artifacts/overlap_candidates.json --manifest ./artifacts/manifest.json --output ./artifacts/registrations.json --debug-dir ./artifacts/debug_registration
 ```
 
 The manifest records:
@@ -43,6 +47,8 @@ The manifest records:
   too blurry, or too small for reliable comparison;
 - overlap candidate ranking output with scores, statuses, reasons, penalties, and heuristic
   similarity metadata;
+- geometric registration output with transform estimates, inlier counts, overlap polygons,
+  confidence, warnings, and optional debug visualization paths;
 - warnings, including unsupported-format notes such as HEIC not being supported yet.
 
 ## Developer setup
@@ -72,5 +78,10 @@ not diagnose melanoma or any other condition. Low image quality may prevent reli
 overlap or change analysis.
 
 Overlap candidate ranking is only a lightweight local heuristic. It does not prove geometric
-overlap, and geometric registration will be implemented in a later PR. No melanoma diagnosis or
-cancer risk scoring is performed.
+overlap. PR-005 geometric registration estimates technical alignment only and remains
+conservative. No melanoma diagnosis or cancer risk scoring is performed.
+
+Geometric registration in PR-005 is also conservative. It estimates technical alignment for
+later review and does not identify lesions, diagnose melanoma, or estimate cancer risk. Debug
+visualization images are technical inspection aids only; they are not the final user-facing
+annotated area-of-concern images.

@@ -8,6 +8,7 @@ from typing import Sequence
 
 from skintrack.io.photos import write_photo_import_manifest
 from skintrack.overlap.candidates import write_overlap_candidate_manifest
+from skintrack.registration.geometric import write_registration_manifest
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -48,6 +49,29 @@ def build_parser() -> argparse.ArgumentParser:
         help="Include unreadable or unsupported manifest records with heavy penalties.",
     )
 
+    registration_parser = subparsers.add_parser(
+        "register-candidate-pairs",
+        help="Estimate geometric registration for ranked overlap candidate pairs.",
+    )
+    registration_parser.add_argument(
+        "candidate_path",
+        help="Overlap candidate JSON file.",
+    )
+    registration_parser.add_argument(
+        "--manifest",
+        required=True,
+        help="Photo import manifest JSON file.",
+    )
+    registration_parser.add_argument(
+        "--output",
+        required=True,
+        help="Output path for the registration JSON file.",
+    )
+    registration_parser.add_argument(
+        "--debug-dir",
+        help="Optional directory for technical debug visualization images.",
+    )
+
     return parser
 
 
@@ -74,6 +98,15 @@ def main(argv: Sequence[str] | None = None) -> int:
             Path(args.manifest_path),
             Path(args.output),
             include_nonimported=args.include_nonimported,
+        )
+        return 0
+
+    if args.command == "register-candidate-pairs":
+        write_registration_manifest(
+            Path(args.manifest),
+            Path(args.candidate_path),
+            Path(args.output),
+            debug_dir=Path(args.debug_dir) if args.debug_dir is not None else None,
         )
         return 0
 
