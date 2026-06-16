@@ -63,6 +63,11 @@ validated manual candidate region lands in the paired photo and can emit neutral
 projection overlays. It does not decide whether anything changed, does not identify lesions, and
 does not make diagnostic claims.
 
+PR-008 adds temporal candidate tracking. It groups validated manual candidate regions and their
+projected observations into technical candidate tracks ordered by timestamp when available. It
+preserves observation source and timestamp provenance, but it does not measure visual change or
+make diagnostic claims.
+
 ## Output contract
 For every change flag, the system should produce:
 
