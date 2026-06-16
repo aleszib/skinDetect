@@ -28,12 +28,17 @@ later geometric registration, but it does not prove that two photos share the sa
 PR-005 adds backend geometric registration for the ranked pairs. It estimates technical image
 alignment only and can optionally write debug visualization images for inspection.
 
+PR-006 adds manual candidate-region intake. It accepts local JSON describing rectangle, polygon,
+or point-radius regions, validates those regions against the imported image dimensions, and can
+write neutral technical overlay images for valid regions.
+
 Example:
 
 ```bash
 python -m skintrack.cli import-photos ./photos --output ./artifacts/manifest.json
 python -m skintrack.cli rank-overlap-candidates ./artifacts/manifest.json --output ./artifacts/overlap_candidates.json
 python -m skintrack.cli register-candidate-pairs ./artifacts/overlap_candidates.json --manifest ./artifacts/manifest.json --output ./artifacts/registrations.json --debug-dir ./artifacts/debug_registration
+python -m skintrack.cli validate-candidate-regions ./artifacts/candidate_regions.json --manifest ./artifacts/manifest.json --output ./artifacts/validated_candidate_regions.json --overlay-dir ./artifacts/candidate_overlays
 ```
 
 The manifest records:
@@ -49,7 +54,21 @@ The manifest records:
   similarity metadata;
 - geometric registration output with transform estimates, inlier counts, overlap polygons,
   confidence, warnings, and optional debug visualization paths;
+- validated candidate-region output with region status, bounding boxes, and optional neutral
+  overlay image paths;
 - warnings, including unsupported-format notes such as HEIC not being supported yet.
+
+Manual candidate-region JSON should use `schema_version: manual-candidate-regions-v1` and list
+regions with `candidate_id`, `photo`, `region_type`, and `coordinates`. Supported region types are:
+
+- `rectangle`
+- `polygon`
+- `point_radius`
+
+Validation checks that the referenced photo can be resolved from the import manifest, that the
+manifest has image dimensions, and that the supplied geometry fits the image bounds. A valid
+region means the supplied coordinates are technically consistent with the imported image, not that
+the region is medically suspicious.
 
 ## Developer setup
 
@@ -85,3 +104,7 @@ Geometric registration in PR-005 is also conservative. It estimates technical al
 later review and does not identify lesions, diagnose melanoma, or estimate cancer risk. Debug
 visualization images are technical inspection aids only; they are not the final user-facing
 annotated area-of-concern images.
+
+Manual candidate-region overlays in PR-006 are also technical inspection artifacts only. They
+draw neutral region markers so the intake can be checked locally; they do not automatically detect
+lesions or diagnose melanoma. No cancer risk scoring is performed.

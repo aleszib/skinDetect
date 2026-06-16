@@ -8,6 +8,7 @@ from typing import Sequence
 
 from skintrack.io.photos import write_photo_import_manifest
 from skintrack.overlap.candidates import write_overlap_candidate_manifest
+from skintrack.regions.manual import write_validated_candidate_region_manifest
 from skintrack.registration.geometric import write_registration_manifest
 
 
@@ -72,6 +73,29 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional directory for technical debug visualization images.",
     )
 
+    regions_parser = subparsers.add_parser(
+        "validate-candidate-regions",
+        help="Validate manual candidate-region JSON against a photo import manifest.",
+    )
+    regions_parser.add_argument(
+        "regions_path",
+        help="Manual candidate-region JSON file.",
+    )
+    regions_parser.add_argument(
+        "--manifest",
+        required=True,
+        help="Photo import manifest JSON file.",
+    )
+    regions_parser.add_argument(
+        "--output",
+        required=True,
+        help="Output path for the validated candidate-region JSON file.",
+    )
+    regions_parser.add_argument(
+        "--overlay-dir",
+        help="Optional directory for neutral technical overlay images.",
+    )
+
     return parser
 
 
@@ -107,6 +131,15 @@ def main(argv: Sequence[str] | None = None) -> int:
             Path(args.candidate_path),
             Path(args.output),
             debug_dir=Path(args.debug_dir) if args.debug_dir is not None else None,
+        )
+        return 0
+
+    if args.command == "validate-candidate-regions":
+        write_validated_candidate_region_manifest(
+            Path(args.manifest),
+            Path(args.regions_path),
+            Path(args.output),
+            overlay_dir=Path(args.overlay_dir) if args.overlay_dir is not None else None,
         )
         return 0
 
