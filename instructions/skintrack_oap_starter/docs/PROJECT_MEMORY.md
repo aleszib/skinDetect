@@ -54,6 +54,10 @@ PR-005 adds geometric registration for ranked candidate pairs using local featur
 RANSAC-based transform estimation. It can also write technical debug visualization images for
 inspection, but it does not perform lesion detection, change flagging, or medical annotation.
 
+PR-006 adds manual candidate-region intake for rectangle, polygon, and point-radius regions, plus
+neutral technical overlay images. It validates regions against imported image dimensions and does
+not automatically detect lesions or make diagnostic claims.
+
 ## Output contract
 For every change flag, the system should produce:
 
