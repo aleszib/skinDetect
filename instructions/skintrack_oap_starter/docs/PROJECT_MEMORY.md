@@ -48,7 +48,11 @@ photo import
 ```
 
 PR-004 adds overlap candidate ranking only. It is a lightweight local heuristic for identifying
-likely photo pairs to send to later geometric registration; it does not confirm actual overlap.
+likely photo pairs before geometric registration; it does not confirm actual overlap.
+
+PR-005 adds geometric registration for ranked candidate pairs using local feature matching and
+RANSAC-based transform estimation. It can also write technical debug visualization images for
+inspection, but it does not perform lesion detection, change flagging, or medical annotation.
 
 ## Output contract
 For every change flag, the system should produce:
