@@ -32,6 +32,11 @@ PR-006 adds manual candidate-region intake. It accepts local JSON describing rec
 or point-radius regions, validates those regions against the imported image dimensions, and can
 write neutral technical overlay images for valid regions.
 
+PR-007 adds candidate-region projection through registered image pairs. It takes validated manual
+candidate regions plus the geometric registration output and estimates where each region lands in
+the paired photo. The result is technical geometry only; it does not decide whether the region
+changed or whether the same lesion is present.
+
 Example:
 
 ```bash
@@ -39,6 +44,7 @@ python -m skintrack.cli import-photos ./photos --output ./artifacts/manifest.jso
 python -m skintrack.cli rank-overlap-candidates ./artifacts/manifest.json --output ./artifacts/overlap_candidates.json
 python -m skintrack.cli register-candidate-pairs ./artifacts/overlap_candidates.json --manifest ./artifacts/manifest.json --output ./artifacts/registrations.json --debug-dir ./artifacts/debug_registration
 python -m skintrack.cli validate-candidate-regions ./artifacts/candidate_regions.json --manifest ./artifacts/manifest.json --output ./artifacts/validated_candidate_regions.json --overlay-dir ./artifacts/candidate_overlays
+python -m skintrack.cli project-candidate-regions --validated-regions ./artifacts/validated_candidate_regions.json --registrations ./artifacts/registrations.json --manifest ./artifacts/manifest.json --output ./artifacts/projected_candidate_regions.json --overlay-dir ./artifacts/projected_overlays
 ```
 
 The manifest records:
@@ -69,6 +75,13 @@ Validation checks that the referenced photo can be resolved from the import mani
 manifest has image dimensions, and that the supplied geometry fits the image bounds. A valid
 region means the supplied coordinates are technically consistent with the imported image, not that
 the region is medically suspicious.
+
+Candidate-region projection expects the validated region JSON plus the registration JSON and the
+original import manifest. It uses the registration transforms to estimate where each validated
+manual candidate region lands in the paired photo and can optionally emit neutral technical
+projection overlays. Supported projections are still only geometric estimates. They do not identify
+lesions, do not diagnose melanoma, do not estimate cancer risk, and do not prove that two regions
+are the same lesion clinically. Change measurement comes later.
 
 ## Developer setup
 
@@ -108,3 +121,7 @@ annotated area-of-concern images.
 Manual candidate-region overlays in PR-006 are also technical inspection artifacts only. They
 draw neutral region markers so the intake can be checked locally; they do not automatically detect
 lesions or diagnose melanoma. No cancer risk scoring is performed.
+
+PR-007 projection overlays are similarly neutral technical inspection artifacts. They mark the
+source manual region and the projected region on a side-by-side local image pair so the geometric
+projection can be reviewed, but they do not indicate diagnostic concern or lesion identity.

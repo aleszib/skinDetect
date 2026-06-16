@@ -58,6 +58,11 @@ PR-006 adds manual candidate-region intake for rectangle, polygon, and point-rad
 neutral technical overlay images. It validates regions against imported image dimensions and does
 not automatically detect lesions or make diagnostic claims.
 
+PR-007 adds candidate-region projection through registered image pairs. It estimates where a
+validated manual candidate region lands in the paired photo and can emit neutral technical
+projection overlays. It does not decide whether anything changed, does not identify lesions, and
+does not make diagnostic claims.
+
 ## Output contract
 For every change flag, the system should produce:
 
